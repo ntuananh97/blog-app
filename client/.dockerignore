@@ -1,0 +1,35 @@
+# Dependencies
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Secrets & Git
+.git
+.gitignore
+.env
+.env.*
+!*.env.example
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode
+.idea
+
+# AI Agent
+.agents
+.claude
+.windsurf
+
+# Build output & Cache
+dist
+build
+coverage
+
+# Docs
+README.md
+docs
+
+# NextJs
+.next
