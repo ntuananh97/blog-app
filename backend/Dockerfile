@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl
 
 COPY package.json package-lock.json ./
 
-RUN npm ci
+RUN npm install
 
 FROM node:22-alpine as builder
 
