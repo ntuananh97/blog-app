@@ -11,26 +11,29 @@ jobs:
 
     steps:
       - name: Checkout Source Code
-      
-        # Chính chủ ko động vào
         uses: actions/checkout@v4
 
-      - name: Inject Environment Variables
+      - name: Generate Backend & Client .env files
         shell: powershell
         run: |
-          # Lấy IP LAN của máy host để gán vào biến môi trường frontend
+          # 1. Lấy IP mạng Wi-Fi/Ethernet hiện tại của laptop
           $lanIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like "*Wi-Fi*" -or $_.InterfaceAlias -like "*Ethernet*" } | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1).IPAddress
-          
-          # Ghi đè hoặc tạo file .env phục vụ build container
-          @"
-          DATABASE_URL=${{ secrets.DATABASE_URL }}
-          LAN_IP=$lanIp
-          "@ | Out-File -FilePath .env -Encoding utf8
 
-      - name: Deploy Containers with Docker Compose
+          # 2. Ghi file backend/.env
+          [System.IO.File]::WriteAllText("$PWD\backend\.env", @"
+          ${{ secrets.BACKEND_ENV }}
+          "@)
+
+          # 3. Ghi file client/.env (kèm tự động gán NEXT_PUBLIC_API_URL theo IP LAN)
+          $clientEnv = @"
+          ${{ secrets.CLIENT_ENV }}
+          NEXT_PUBLIC_API_URL=http://${lanIp}:4000
+          "@
+          [System.IO.File]::WriteAllText("$PWD\client\.env", $clientEnv)
+
+      - name: Deploy Containers
         shell: powershell
         run: |
-          $envContent = "DATABASE_URL=${{ secrets.DATABASE_URL }}`nNEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}"
-          [System.IO.File]::WriteAllText("$PWD\.env", $envContent)
+          docker compose down --remove-orphans
           docker compose up -d --build
           docker image prune -f
