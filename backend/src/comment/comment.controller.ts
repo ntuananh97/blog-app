@@ -7,6 +7,7 @@ import {
   Query,
   Get,
   Patch,
+  Version,
 } from '@nestjs/common';
 import { CommentService } from './comment.service';
 import { CreateCommentDto } from './dto/create-comment.dto';
@@ -14,6 +15,7 @@ import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { JWTAuthGuard } from 'src/auth/guard/auth.guard';
 import { GetBlogCommentsDto } from './dto/get-blog-comment-query.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { GetCursorBlogCommentsDto } from './dto/get-blog-comment-cursor-query.dto';
 
 @Controller()
 export class CommentController {
@@ -39,6 +41,15 @@ export class CommentController {
     @Query() queryCommentDto: GetBlogCommentsDto,
   ) {
     return this.commentService.findByBlog(blogId, queryCommentDto);
+  }
+
+  @Get('blog/:blogId/comment')
+  @Version('2')
+  viewBlogCommentsV2(
+    @Param('blogId') blogId: number,
+    @Query() queryCommentDto: GetCursorBlogCommentsDto,
+  ) {
+    return this.commentService.findByBlogWithCursor(blogId, queryCommentDto);
   }
 
   @Get('comment/:commentId/replies')

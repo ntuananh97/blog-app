@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Version,
 } from '@nestjs/common';
 import { BlogService } from './blog.service';
 import { CreateBlogDto } from './dto/create-blog.dto';
@@ -15,6 +16,7 @@ import { UpdateBlogDto } from './dto/update-blog.dto';
 import { JWTAuthGuard } from 'src/auth/guard/auth.guard';
 import { CurrentUser } from 'src/common/decorator/current-user.decorator';
 import { QueryBlogDto } from './dto/query-blog.dto';
+import { CursorQueryBlogDto } from './dto/cursor-query-blog.dto';
 
 @Controller('blog')
 export class BlogController {
@@ -32,6 +34,12 @@ export class BlogController {
   @Get('public')
   findAllPublic(@Query() query: QueryBlogDto) {
     return this.blogService.findAllPublic(query);
+  }
+
+  @Get('public')
+  @Version('2')
+  findAllPublicWithCursor(@Query() query: CursorQueryBlogDto) {
+    return this.blogService.findAllPublicWithCursor(query);
   }
 
   @Get(':id')

@@ -4,8 +4,14 @@
 
 3. Comments: Create, View, Find replies, Update
 
+- View: offset + cursor
+
 4. Rate Limit: Using nestjs/throttle
 
 + Entire app: 100 req/60 seconds
 
 + Login route: 3req/60s
+
+5. Failed Login Attempt: 3 
+
+

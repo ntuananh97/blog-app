@@ -8,6 +8,7 @@ import { CreateBlogDto } from './dto/create-blog.dto';
 import { UpdateBlogDto } from './dto/update-blog.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QueryBlogDto } from './dto/query-blog.dto';
+import { CursorQueryBlogDto } from './dto/cursor-query-blog.dto';
 
 @Injectable()
 export class BlogService {
@@ -61,6 +62,47 @@ export class BlogService {
         total,
         limit,
         page,
+      },
+    };
+  }
+
+  async findAllPublicWithCursor(query: CursorQueryBlogDto) {
+    const { cursor, limit } = query;
+    // Build Query  + Pagination
+    const buildQuery = {};
+    // Query db + Count total
+    const blogs = await this.prisma.blog.findMany({
+      where: buildQuery,
+      ...(cursor && {
+        cursor: {
+          id: cursor,
+        },
+        skip: 1,
+      }),
+      include: {
+        author: {
+          select: {
+            id: true,
+            email: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+      take: limit + 1,
+    });
+
+    const hasNextPage = blogs.length > limit;
+    const data = hasNextPage ? blogs.slice(0, blogs.length - 1) : blogs;
+    const nextCursor = hasNextPage ? data[data.length - 1].id : null;
+
+    return {
+      blogs,
+      pagination: {
+        hasNextPage,
+        limit,
+        nextCursor,
       },
     };
   }

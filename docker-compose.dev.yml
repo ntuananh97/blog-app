@@ -1,0 +1,45 @@
+services:
+  api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile.dev
+    container_name: dev_nestjs
+    ports:
+      - "4000:4000"
+    env_file:
+      - ./backend/.env
+    environment:
+      - NODE_ENV=development
+      - TSC_WATCHFILE=true
+      - CHOKIDAR_USEPOLLING=true
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+  
+  web:
+    build: 
+      context: ./client
+      dockerfile: Dockerfile.dev
+    container_name: dev_nextjs
+    env_file:
+      - ./client/.env
+    environment:
+      - NODE_ENV=development
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+    ports:
+      - "3000:3000"
+    
+    volumes:
+      # Bind mount
+      - ./client:/app
+      
+      # Anonymous Volume: Tránh xung đột node_modules và cache build .next
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
+      
+    
+    
+    

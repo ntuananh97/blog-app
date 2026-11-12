@@ -8,6 +8,7 @@ import { CreateCommentDto } from './dto/create-comment.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { GetBlogCommentsDto } from './dto/get-blog-comment-query.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
+import { GetCursorBlogCommentsDto } from './dto/get-blog-comment-cursor-query.dto';
 
 @Injectable()
 export class CommentService {
@@ -94,6 +95,52 @@ export class CommentService {
         total,
         limit,
         page,
+      },
+    };
+  }
+
+  async findByBlogWithCursor(
+    blogId: number,
+    queryCommentDto: GetCursorBlogCommentsDto,
+  ) {
+    // Calc pagination
+    const { limit, cursor } = queryCommentDto;
+
+    // Get only root comments
+    const where = {
+      blogId,
+      parentId: null,
+    };
+
+    const comments = await this.prisma.comment.findMany({
+      where,
+      take: limit + 1, // Check hasNextPage
+      ...(cursor && {
+        cursor: { id: cursor }, // Field user cursor must be unique
+        skip: 1, // Ignore current cursor row
+      }),
+      orderBy: [{ id: 'desc' }],
+      include: {
+        _count: {
+          select: {
+            replies: true,
+          },
+        },
+      },
+    });
+
+    const hasNextPage = comments.length > limit;
+    const data = hasNextPage
+      ? comments.slice(0, comments.length - 1)
+      : comments;
+    const nextCursor = hasNextPage ? data[data.length - 1].id : null;
+
+    return {
+      data,
+      pagination: {
+        hasNextPage,
+        limit,
+        nextCursor,
       },
     };
   }

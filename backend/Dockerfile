@@ -7,7 +7,7 @@ RUN apk add --no-cache openssl
 
 COPY package.json package-lock.json ./
 
-RUN npm install
+RUN npm ci
 
 FROM node:22-alpine as builder
 
@@ -17,6 +17,10 @@ WORKDIR /app
 RUN apk add --no-cache openssl
 
 COPY --from=deps /app/node_modules ./node_modules
+
+# [TỐI ƯU CACHE]: Copy riêng prisma schema và generate client trước
+COPY prisma ./prisma
+RUN npx prisma generate
 
 COPY . .
 
