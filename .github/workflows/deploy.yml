@@ -31,9 +31,14 @@ jobs:
           "@
           [System.IO.File]::WriteAllText("$PWD\client\.env", $clientEnv)
 
-      - name: Deploy Containers
+      - name: Build and Start Containers
         shell: powershell
         run: |
           docker compose down --remove-orphans
           docker compose up -d --build
-          docker image prune -f
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Cleanup Unused Images
+        if: always()
+        shell: powershell
+        run: docker image prune -f
