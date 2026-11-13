@@ -5,7 +5,8 @@ function makeQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 60 * 1000, // tránh refetch ngay sau khi hydrate
+        staleTime: 0, // tránh refetch ngay sau khi hydrate
+        refetchOnWindowFocus: true,
       },
     },
   });
