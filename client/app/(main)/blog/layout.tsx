@@ -43,7 +43,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </header>
       {children}
       <footer className="border-t py-8 text-center text-sm text-muted-foreground">
-        © {new Date().getFullYear()} DevBlog. Xây dựng với Next.js, Tailwind CSS
+        © DevBlog. Xây dựng với Next.js, Tailwind CSS
         và shadcn/ui.
       </footer>
     </>
