@@ -16,7 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { API_BASE_URL } from "@/lib/constants"
 import { useRouter } from 'next/navigation';
-import { saveRefreshTokenToCookie, saveTokenToCookie, saveUserInfoToCookies } from "@/lib/utils"
+import { getSafeRedirect, saveRefreshTokenToCookie, saveTokenToCookie, saveUserInfoToCookies } from "@/lib/utils"
 import GoogleLoginButton from "./googleLoginButtion"
 
 export default function LoginPage() {
@@ -48,6 +48,7 @@ export default function LoginPage() {
       if (!res.ok) {
         const data = await res.json().catch(() => null)
         setError(data?.message ?? "Đăng nhập thất bại.")
+        return
       }
 
       const data = await res.json();
@@ -61,8 +62,8 @@ export default function LoginPage() {
       // Refresh server components to reflect the new session state
       router.refresh();
 
-      // Redirect to home page
-      router.push('/')
+      // Quay lại trang trước đó (vd: /blog/1#comments), mặc định là trang chủ
+      router.push(getSafeRedirect(new URLSearchParams(window.location.search).get('redirect')))
 
     } catch (err) {
       setError(err instanceof Error ? err.message : "Đã có lỗi xảy ra.")

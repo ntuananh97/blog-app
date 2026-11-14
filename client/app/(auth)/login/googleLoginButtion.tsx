@@ -1,7 +1,7 @@
 "use client";
 
 import { httpRequest } from "@/lib/httpRequest";
-import { saveRefreshTokenToCookie, saveTokenToCookie, saveUserInfoToCookies } from "@/lib/utils";
+import { getSafeRedirect, saveRefreshTokenToCookie, saveTokenToCookie, saveUserInfoToCookies } from "@/lib/utils";
 import { ILoginResponse } from "@/types/user.type";
 import { GoogleLogin, CredentialResponse } from "@react-oauth/google";
 import { useRouter } from 'next/navigation';
@@ -40,8 +40,8 @@ export default function GoogleLoginButton({onLoading}: {onLoading: (val: boolean
        // Refresh server components to reflect the new session state
       router.refresh();
 
-      // Redirect to home page
-      router.push('/')
+      // Quay lại trang trước đó (vd: /blog/1#comments), mặc định là trang chủ
+      router.push(getSafeRedirect(new URLSearchParams(window.location.search).get('redirect')))
     } catch (error) {
       console.error("Lỗi đăng nhập Google:", error);
     }

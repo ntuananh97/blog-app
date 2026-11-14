@@ -6,6 +6,7 @@ import { ArrowLeft, Bookmark, CalendarDays, Share2, Sparkles, UserRound } from "
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/blog-data";
 import { useDetailBlog } from "@/features/blogs/api/get-blogs";
+import CommentSection from "@/features/comments/components/CommentSection";
 
 
 export default  function BlogDetail({ id }: { id: string }) {
@@ -123,6 +124,8 @@ export default  function BlogDetail({ id }: { id: string }) {
               </div> */}
             </div>
           </section>
+
+          <CommentSection blogId={Number(id)} />
         </article>
 
         {/* <aside className="space-y-6">

@@ -10,6 +10,9 @@ import { GetBlogCommentsDto } from './dto/get-blog-comment-query.dto';
 import { UpdateCommentDto } from './dto/update-comment.dto';
 import { GetCursorBlogCommentsDto } from './dto/get-blog-comment-cursor-query.dto';
 
+// Public author info attached to every comment
+const AUTHOR_SELECT = { select: { id: true, email: true } };
+
 @Injectable()
 export class CommentService {
   constructor(private prisma: PrismaService) {}
@@ -57,6 +60,9 @@ export class CommentService {
         blogId,
         authorId: userId,
       },
+      include: {
+        author: AUTHOR_SELECT,
+      },
     });
     return {
       data: newComment,
@@ -80,6 +86,7 @@ export class CommentService {
         skip: limit * (page - 1),
         orderBy: [{ createdAt: 'desc' }],
         include: {
+          author: AUTHOR_SELECT,
           _count: {
             select: {
               replies: true,
@@ -121,6 +128,7 @@ export class CommentService {
       }),
       orderBy: [{ id: 'desc' }],
       include: {
+        author: AUTHOR_SELECT,
         _count: {
           select: {
             replies: true,
@@ -154,6 +162,9 @@ export class CommentService {
     const replies = await this.prisma.comment.findMany({
       where,
       orderBy: [{ createdAt: 'desc' }],
+      include: {
+        author: AUTHOR_SELECT,
+      },
     });
 
     return {

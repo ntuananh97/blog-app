@@ -37,3 +37,31 @@ export const logout = () => {
   Cookies.remove(USER_INFO_KEY);
 }
 
+// Chỉ cho phép redirect tới đường dẫn nội bộ (chống open redirect)
+export const getSafeRedirect = (raw: string | null | undefined): string => {
+  if (!raw || !raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) {
+    return "/";
+  }
+  return raw;
+};
+
+const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ["year", 365 * 24 * 60 * 60],
+  ["month", 30 * 24 * 60 * 60],
+  ["day", 24 * 60 * 60],
+  ["hour", 60 * 60],
+  ["minute", 60],
+];
+
+// Ví dụ: "5 phút trước", "hôm qua"
+export const formatRelativeTime = (iso: string): string => {
+  const diffSeconds = Math.round((new Date(iso).getTime() - Date.now()) / 1000);
+  const rtf = new Intl.RelativeTimeFormat("vi", { numeric: "auto" });
+  for (const [unit, seconds] of RELATIVE_UNITS) {
+    if (Math.abs(diffSeconds) >= seconds) {
+      return rtf.format(Math.round(diffSeconds / seconds), unit);
+    }
+  }
+  return "vừa xong";
+};
+
