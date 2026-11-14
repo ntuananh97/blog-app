@@ -14,6 +14,8 @@ services:
     build: 
       context: ./client
       dockerfile: Dockerfile
+      secrets:
+        - env_file
     container_name: client
     restart: unless-stopped # Quan trọng: Tự khởi động lại khi crash hoặc reboot server
     env_file:
@@ -22,6 +24,10 @@ services:
       - "3000:3000"
     depends_on:
       - api
+  
+  secrets:
+    env_file:
+      file: ./client/.env
       
     
     

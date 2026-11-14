@@ -20,7 +20,8 @@ COPY . .
 # Tắt telemetry của Next.js trong quá trình build
 ENV NEXT_TELEMETRY_DISABLED=1
 
-RUN npm run build
+RUN --mount=type=secret,id=env_file,target=app/.env,uid=1000 \
+    npm run build
 
 FROM node:22-alpine as runner
 

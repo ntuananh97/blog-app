@@ -7,8 +7,8 @@ yarn-error.log*
 # Secrets & Git
 .git
 .gitignore
-# .env
-# .env.*
+.env
+.env.*
 !*.env.example
 
 # IDE & OS
