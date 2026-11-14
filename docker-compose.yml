@@ -25,9 +25,9 @@ services:
     depends_on:
       - api
   
-  secrets:
-    env_file:
-      file: ./client/.env
+secrets:
+  env_file:
+    file: ./client/.env
       
     
     
