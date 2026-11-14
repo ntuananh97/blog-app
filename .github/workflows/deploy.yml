@@ -31,7 +31,7 @@ jobs:
           # 3. Ghi file client/.env (kèm tự động gán NEXT_PUBLIC_API_URL theo IP LAN)
           $clientEnv = @"
           ${{ secrets.CLIENT_ENV }}
-          NEXT_PUBLIC_API_URL=http://${lanIp}:4000
+          NEXT_PUBLIC_API_URL=http://${lanIp}:4000/api/v1
           NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
           "@
           [System.IO.File]::WriteAllText("$PWD\client\.env", $clientEnv)
