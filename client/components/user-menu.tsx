@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { FileText, LogOut, PenSquare } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -55,7 +55,15 @@ export function UserMenu({ guestFallback }: UserMenuProps) {
           </Button>
         }
       ></DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem render={<Link href="/blog/create" />}>
+          <PenSquare className="mr-2 h-4 w-4" />
+          Create new blog
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/blog/me" />}>
+          <FileText className="mr-2 h-4 w-4" />
+          My blogs
+        </DropdownMenuItem>
         <DropdownMenuItem onClick={logout}>
           <LogOut className="mr-2 h-4 w-4" />
           Logout

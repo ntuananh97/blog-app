@@ -142,6 +142,14 @@ if (token) {
     });
   },
 
+  patch<T, B=unknown>(endpoint: string, body: B, options?: CustomOptions) {
+    return this.request<T>(endpoint, {
+      ...options,
+      method: 'PATCH',
+      body: JSON.stringify(body),
+    });
+  },
+
   delete<T>(endpoint: string, options?: CustomOptions) {
     return this.request<T>(endpoint, { ...options, method: 'DELETE' });
   },

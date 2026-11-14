@@ -54,7 +54,40 @@ export class BlogService {
         skip,
         take: limit,
       }),
-      this.prisma.user.count({ where: buildQuery }),
+      this.prisma.blog.count({ where: buildQuery }),
+    ]);
+    return {
+      blogs,
+      pagination: {
+        total,
+        limit,
+        page,
+      },
+    };
+  }
+
+  async findMine(userId: number, query: QueryBlogDto) {
+    const { page, limit } = query;
+    const skip = (page - 1) * limit;
+    const where = { authorId: userId };
+    const [blogs, total] = await this.prisma.$transaction([
+      this.prisma.blog.findMany({
+        where,
+        include: {
+          author: {
+            select: {
+              id: true,
+              email: true,
+            },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+      this.prisma.blog.count({ where }),
     ]);
     return {
       blogs,

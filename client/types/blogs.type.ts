@@ -20,3 +20,19 @@ export interface IBlogResponse {
 export interface IBlogDetailResponse {
     blog: IBlog;
 }
+
+export interface IBlogFormValues {
+    title: string;
+    content: string;
+}
+
+export type ICreateBlogBody = IBlogFormValues;
+export type IUpdateBlogBody = Partial<IBlogFormValues>;
+
+export interface ICreateBlogResponse {
+    blog: IBlog;
+}
+
+export interface IUpdateBlogResponse {
+    data: IBlog;
+}

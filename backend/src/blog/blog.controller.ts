@@ -31,6 +31,12 @@ export class BlogController {
     return this.blogService.create(createBlogDto, userId);
   }
 
+  @UseGuards(JWTAuthGuard)
+  @Get('me')
+  findMine(@CurrentUser('sub') userId: string, @Query() query: QueryBlogDto) {
+    return this.blogService.findMine(+userId, query);
+  }
+
   @Get('public')
   findAllPublic(@Query() query: QueryBlogDto) {
     return this.blogService.findAllPublic(query);
