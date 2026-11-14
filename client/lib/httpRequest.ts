@@ -1,9 +1,24 @@
 import Cookies from 'js-cookie';
 import { ACCESS_TOKEN_KEY, API_BASE_URL, REFRESH_TOKEN_KEY } from './constants';
 import { logout, saveTokenToCookie } from './utils';
-import { redirect } from 'next/navigation';
 
 const BASE_URL = API_BASE_URL;
+
+// Các endpoint auth không được kích hoạt cơ chế refresh token
+// (vd: login sai mật khẩu cũng trả 401 nhưng không phải do token hết hạn)
+const AUTH_ENDPOINTS = ['/auth/login', '/auth/register', '/auth/refresh-token'];
+
+export class HttpError extends Error {
+  status: number;
+  data: unknown;
+
+  constructor(status: number, message: string, data?: unknown) {
+    super(message);
+    this.name = 'HttpError';
+    this.status = status;
+    this.data = data;
+  }
+}
 
 // Helper lấy token tự động tùy theo môi trường Server hay Client
 async function getToken(): Promise<string | undefined> {
@@ -24,12 +39,48 @@ type CustomOptions = RequestInit & {
   baseUrl?: string;
 };
 
-let refreshQueue: ((token: string) => void)[] = [];
-let isRefreshing = false;
+// Promise refresh dùng chung: nhiều request 401 đồng thời chỉ gọi refresh 1 lần,
+// tất cả cùng chờ kết quả (thành công -> token mới, thất bại -> cùng bị reject).
+let refreshPromise: Promise<string> | null = null;
 
-const onResolveRefreshQueue = (token: string) => {
-  refreshQueue.forEach((cb) => cb(token));
-  refreshQueue = [];
+async function refreshAccessToken(): Promise<string> {
+  const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken: Cookies.get(REFRESH_TOKEN_KEY) }),
+  });
+
+  if (!res.ok) {
+    throw new HttpError(res.status, 'Phiên đăng nhập đã hết hạn');
+  }
+
+  const data = await res.json();
+  const newToken: string = data.accessToken;
+  saveTokenToCookie(newToken);
+  return newToken;
+}
+
+function getRefreshedToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = refreshAccessToken()
+      .catch((error) => {
+        // Refresh thất bại: xóa phiên và đưa về trang login
+        logout();
+        window.location.href = '/login';
+        throw error;
+      })
+      .finally(() => {
+        refreshPromise = null; // luôn reset, tránh kẹt trạng thái
+      });
+  }
+  return refreshPromise;
+}
+
+async function parseBody<T>(response: Response): Promise<T> {
+  // 204 No Content hoặc body rỗng (vd: DELETE)
+  if (response.status === 204) return undefined as T;
+  const text = await response.text();
+  return (text ? JSON.parse(text) : undefined) as T;
 }
 
 export const httpRequest = {
@@ -44,82 +95,57 @@ export const httpRequest = {
 
     // 2. Chuẩn bị headers mặc định
     const reqHeaders = new Headers(headers);
-    if (!reqHeaders.has('Content-Type')) {
-  reqHeaders.set('Content-Type', 'application/json');
-}
-
-if (token) {
-  reqHeaders.set('authorization', `Bearer ${token}`);
-}
-    // const defaultHeaders: HeadersInit = {
-    //   'Content-Type': 'application/json',
-    //   ...(token ? { authorization: `Bearer ${token}` } : {}),
-    //   ...headers,
-    // };
+    // FormData cần để trình duyệt tự set Content-Type (kèm boundary)
+    const isFormData = typeof FormData !== 'undefined' && restOptions.body instanceof FormData;
+    if (!reqHeaders.has('Content-Type') && !isFormData) {
+      reqHeaders.set('Content-Type', 'application/json');
+    }
+    if (token) {
+      reqHeaders.set('authorization', `Bearer ${token}`);
+    }
 
     // Chuẩn hóa URL
     const url = baseUrl + endpoint;
 
     // 3. Thực hiện request
     const makeRequest = () => fetch(url, {
-      headers: reqHeaders,
       ...restOptions,
+      headers: reqHeaders,
     });
     let response = await makeRequest();
 
-    // 4. Xử lý lỗi tập trung
-    if (!response.ok) {
-      if (response.status === 401 && typeof window !== "undefined") {
-        if (!isRefreshing) {
-          isRefreshing = true;
+    // 4. Token hết hạn (chỉ refresh được ở Client): refresh rồi gọi lại request
+    const canRefresh =
+      response.status === 401 &&
+      typeof window !== 'undefined' &&
+      !AUTH_ENDPOINTS.some((path) => endpoint.startsWith(path));
 
+    if (canRefresh) {
+      // Nếu request khác đã refresh xong trong lúc request này đang bay, dùng luôn token mới
+      const currentToken = Cookies.get(ACCESS_TOKEN_KEY);
+      const newToken =
+        currentToken && currentToken !== token
+          ? currentToken
+          : await getRefreshedToken();
 
-          try {
-            const res = await fetch(`${BASE_URL}/auth/refresh-token`, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                refreshToken: Cookies.get(REFRESH_TOKEN_KEY),
-              }),
-            });
-            const isClient = typeof window !== "undefined";
-
-            if (!res.ok && res.status === 401) {
-              // Nếu refresh token cũng hết hạn, redirect về trang login
-                logout();
-              window.location.href = '/login';
-
-            } else if (res.ok) {
-              isRefreshing = false;;
-              const data = await res.json();
-              const newToken = data.accessToken;
-              if (isClient) {
-                saveTokenToCookie(newToken);
-              }
-
-              // Call request again
-              reqHeaders.set('authorization', `Bearer ${newToken}`);
-              response = await fetch(url, { headers: reqHeaders, ...restOptions });
-              onResolveRefreshQueue(newToken);
-            }
-          } catch {
-          }
-        }
-        else {
-          const newToken = await new Promise<string>((resolve) => {
-            refreshQueue.push(resolve);
-          });
-          reqHeaders.set('authorization', `Bearer ${newToken}`);
-          response = await fetch(url, { headers: reqHeaders, ...restOptions });
-        }
-      }
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Lỗi HTTP: ${response.status}`);
+      reqHeaders.set('authorization', `Bearer ${newToken}`);
+      response = await makeRequest();
     }
 
-    return response.json();
+    // 5. Xử lý lỗi tập trung
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const message = Array.isArray(errorData.message)
+        ? errorData.message.join(', ') // NestJS validation trả về mảng
+        : errorData.message;
+      throw new HttpError(
+        response.status,
+        message || `Lỗi HTTP: ${response.status}`,
+        errorData
+      );
+    }
+
+    return parseBody<T>(response);
   },
 
   get<T>(endpoint: string, options?: CustomOptions) {
@@ -130,7 +156,7 @@ if (token) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
 
@@ -138,7 +164,7 @@ if (token) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
 
@@ -146,7 +172,7 @@ if (token) {
     return this.request<T>(endpoint, {
       ...options,
       method: 'PATCH',
-      body: JSON.stringify(body),
+      body: body instanceof FormData ? body : JSON.stringify(body),
     });
   },
 
