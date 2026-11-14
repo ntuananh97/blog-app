@@ -1,0 +1,1 @@
+This project use Nestjs, prisma v7 and postgreSQL (cloud)
