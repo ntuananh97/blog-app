@@ -1,49 +1,49 @@
-name: Staging Deployment on Windows 11
+# name: Staging Deployment on Windows 11
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-concurrency:
-  group: deploy-${{ github.ref }}
-  cancel-in-progress: true
+# concurrency:
+#   group: deploy-${{ github.ref }}
+#   cancel-in-progress: true
 
-jobs:
-  deploy:
-    runs-on: self-hosted
+# jobs:
+#   deploy:
+#     runs-on: self-hosted
 
-    steps:
-      - name: Checkout Source Code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout Source Code
+#         uses: actions/checkout@v4
 
-      - name: Generate Backend & Client .env files
-        shell: powershell
-        run: |
-          # 1. Lấy IP mạng Wi-Fi/Ethernet hiện tại của laptop
-          $lanIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like "*Wi-Fi*" -or $_.InterfaceAlias -like "*Ethernet*" } | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1).IPAddress
+#       - name: Generate Backend & Client .env files
+#         shell: powershell
+#         run: |
+#           # 1. Lấy IP mạng Wi-Fi/Ethernet hiện tại của laptop
+#           $lanIp = (Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.InterfaceAlias -like "*Wi-Fi*" -or $_.InterfaceAlias -like "*Ethernet*" } | Where-Object { $_.IPAddress -notlike "127.*" -and $_.IPAddress -notlike "169.254.*" } | Select-Object -First 1).IPAddress
 
-          # 2. Ghi file backend/.env
-          [System.IO.File]::WriteAllText("$PWD\backend\.env", @"
-          ${{ secrets.BACKEND_ENV }}
-          "@)
+#           # 2. Ghi file backend/.env
+#           [System.IO.File]::WriteAllText("$PWD\backend\.env", @"
+#           ${{ secrets.BACKEND_ENV }}
+#           "@)
 
-          # 3. Ghi file client/.env (kèm tự động gán NEXT_PUBLIC_API_URL theo IP LAN)
-          $clientEnv = @"
-          ${{ secrets.CLIENT_ENV }}
-          NEXT_PUBLIC_API_URL=http://${lanIp}:4000/api/v1
-          NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
-          "@
-          [System.IO.File]::WriteAllText("$PWD\client\.env", $clientEnv)
+#           # 3. Ghi file client/.env (kèm tự động gán NEXT_PUBLIC_API_URL theo IP LAN)
+#           $clientEnv = @"
+#           ${{ secrets.CLIENT_ENV }}
+#           NEXT_PUBLIC_API_URL=http://${lanIp}:4000/api/v1
+#           NEXT_PUBLIC_GOOGLE_CLIENT_ID=${{ secrets.NEXT_PUBLIC_GOOGLE_CLIENT_ID }}
+#           "@
+#           [System.IO.File]::WriteAllText("$PWD\client\.env", $clientEnv)
 
-      - name: Build and Start Containers
-        shell: powershell
-        run: |
-          docker compose down --remove-orphans
-          docker compose up -d --build
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+#       - name: Build and Start Containers
+#         shell: powershell
+#         run: |
+#           docker compose down --remove-orphans
+#           docker compose up -d --build
+#           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
-      - name: Cleanup Unused Images
-        if: always()
-        shell: powershell
-        run: docker image prune -f
+#       - name: Cleanup Unused Images
+#         if: always()
+#         shell: powershell
+#         run: docker image prune -f
