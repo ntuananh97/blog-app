@@ -37,6 +37,6 @@ jobs:
         run: npm run lint
 
       - name: Run Tests
-        if: matrix.app = 'backend'
+        if: matrix.app == 'backend'
         working-directory: ./${{ matrix.app }}
         run: npm run test
