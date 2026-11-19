@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { BlogList } from "@/app/(main)/blog/_components/BlogList";
 
 export default function Home() {
-  const helloCI = "hello ci"
+  const helloCI = "hello ci 1"
 
   return <div className="flex min-h-screen flex-col bg-background">
     

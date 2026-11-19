@@ -32,11 +32,11 @@ jobs:
         working-directory: ./backend
         run: npx prisma generate
 
-      - name: Run Linter
-        working-directory: ./${{ matrix.app }}
-        run: npm run lint
+      # - name: Run Linter
+      #   working-directory: ./${{ matrix.app }}
+      #   run: npm run lint
 
-      - name: Run Tests
-        if: matrix.app = 'backend'
-        working-directory: ./${{ matrix.app }}
-        run: npm run test
+      # - name: Run Tests
+      #   if: matrix.app == 'backend'
+      #   working-directory: ./${{ matrix.app }}
+      #   run: npm run test

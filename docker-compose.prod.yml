@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  api:
+    image: ghcr.io/${GITHUB_USER}/${REPO_NAME}-api:latest
+    container_name: nest_api
+    restart: always
+    ports:
+      - "3000:4000"
+    env_file:
+      - .env.api
+    networks:
+      - app-network
+
+  web:
+    image: ghcr.io/${GITHUB_USER}/${REPO_NAME}-web:latest
+    container_name: next_web
+    restart: always
+    ports:
+      - "3001:3000" # Map cổng 3001 của EC2 vào 3000 của Next.js
+    # env_file:
+    #   - .env.web
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
