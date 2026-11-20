@@ -21,7 +21,7 @@ Prisma: the config file is named `prisma7.config.ts` (not the default), so pass 
 
 ## Architecture
 
-- `src/main.ts`: global prefix `api`, URI versioning with default `v1` (routes are `/api/v1/...`), CORS open to `*`, global `ValidationPipe` with `whitelist` + `forbidNonWhitelisted` + `transform` (DTOs reject unknown properties). Listens on `0.0.0.0:$PORT` (4000 in Docker).
+- `src/main.ts`: global prefix `api`, URI versioning with default `v1` (routes are `/api/v1/...`), CORS is `*` outside production; in production, origins come from the comma-separated `CORS_ORIGIN` env var (required when `NODE_ENV=production`), global `ValidationPipe` with `whitelist` + `forbidNonWhitelisted` + `transform` (DTOs reject unknown properties). Listens on `0.0.0.0:$PORT` (4000 in Docker).
 - `src/app.module.ts`: global `ConfigModule`, global `ThrottlerGuard` (100 req / 60s), and feature modules `auth`, `blog`, `comment`, `prisma`.
 - Feature modules follow `controller / service / dto / entities` layout. Auth is protected via `auth/guard/auth.guard.ts` plus the `@CurrentUser` decorator in `common/decorator`.
 - Login brute-force protection is an **in-memory** `Map` (`auth/rate-limit-login/login-attemp.service.ts`, keyed by email+ip, 3 attempts → 60s lock, surfaced through `LoginLockedException` and its filter). It does not survive restarts or work across multiple instances.

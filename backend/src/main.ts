@@ -11,8 +11,18 @@ async function bootstrap() {
   const port = config.getOrThrow<number>('PORT');
   Logger.log(`Server is running on port ${port}`);
 
+  // Dev: allow all origins. Production: origins come from CORS_ORIGIN (comma-separated).
+  const isProduction = config.get<string>('NODE_ENV') === 'production';
+  const corsOrigin = isProduction
+    ? config
+        .getOrThrow<string>('CORS_ORIGIN')
+        .split(',')
+        .map((origin) => origin.trim())
+        .filter(Boolean)
+    : '*';
+
   app.enableCors({
-    origin: '*',
+    origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     allowedHeaders: '*',
   });
