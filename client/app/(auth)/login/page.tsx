@@ -37,6 +37,8 @@ export default function LoginPage() {
     }
 
     setLoading(true)
+    console.log('API_BASE_URL', API_BASE_URL);
+    
     try {
       // TODO: thay bằng API thật của bạn (hoặc signIn() của NextAuth)
       const res = await fetch(`${API_BASE_URL}/auth/login`, {
