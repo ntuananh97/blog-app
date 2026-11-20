@@ -21,6 +21,8 @@ async function bootstrap() {
         .filter(Boolean)
     : '*';
 
+  Logger.log(`corsOrigin `, corsOrigin);
+
   app.enableCors({
     origin: corsOrigin,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
