@@ -5,7 +5,7 @@ services:
     container_name: nest_api
     restart: always
     ports:
-      - "3000:4000"
+      - "127.0.0.1:4000:4000"
     env_file:
       - .env.api
     networks:
@@ -16,7 +16,7 @@ services:
     container_name: next_web
     restart: always
     ports:
-      - "3001:3000" # Map cổng 3001 của EC2 vào 3000 của Next.js
+      - "127.0.0.1:3000:3000" # Map cổng 3001 của EC2 vào 3000 của Next.js
     # env_file:
     #   - .env.web
     networks:
