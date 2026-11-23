@@ -23,14 +23,14 @@ jobs:
           cache: 'npm'
           cache-dependency-path: ./${{ matrix.app }}/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./${{ matrix.app }}
-        run: npm ci
+      # - name: Install dependencies
+      #   working-directory: ./${{ matrix.app }}
+      #   run: npm ci
 
-      - name: Generate Prisma Client (Chỉ dành cho API)
-        if: matrix.app == 'backend'
-        working-directory: ./backend
-        run: npx prisma generate
+      # - name: Generate Prisma Client (Chỉ dành cho API)
+      #   if: matrix.app == 'backend'
+      #   working-directory: ./backend
+      #   run: npx prisma generate
 
       # - name: Run Linter
       #   working-directory: ./${{ matrix.app }}
