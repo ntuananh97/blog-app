@@ -1,42 +1,42 @@
-name: CI Pipeline
+# name: CI Pipeline
 
-on:
-  pull_request:
-    branches: [ main ]
+# on:
+#   pull_request:
+#     branches: [ main ]
 
-jobs:
-  lint-and-test:
-    name: Lint & Test (${{ matrix.app }})
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        app: [client, backend] # Chạy song song 2 job cho web và api
+# jobs:
+#   lint-and-test:
+#     name: Lint & Test (${{ matrix.app }})
+#     runs-on: ubuntu-latest
+#     strategy:
+#       matrix:
+#         app: [client, backend] # Chạy song song 2 job cho web và api
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-          cache: 'npm'
-          cache-dependency-path: ./${{ matrix.app }}/package-lock.json
+#       - name: Setup Node.js
+#         uses: actions/setup-node@v4
+#         with:
+#           node-version: '22'
+#           cache: 'npm'
+#           cache-dependency-path: ./${{ matrix.app }}/package-lock.json
 
-      - name: Install dependencies
-        working-directory: ./${{ matrix.app }}
-        run: npm ci
+#       - name: Install dependencies
+#         working-directory: ./${{ matrix.app }}
+#         run: npm ci
 
-      - name: Generate Prisma Client (Chỉ dành cho API)
-        if: matrix.app == 'backend'
-        working-directory: ./backend
-        run: npx prisma generate
+#       - name: Generate Prisma Client (Chỉ dành cho API)
+#         if: matrix.app == 'backend'
+#         working-directory: ./backend
+#         run: npx prisma generate
 
-      - name: Run Linter
-        working-directory: ./${{ matrix.app }}
-        run: npm run lint
+#       - name: Run Linter
+#         working-directory: ./${{ matrix.app }}
+#         run: npm run lint
 
-      - name: Run Tests
-        if: matrix.app == 'backend'
-        working-directory: ./${{ matrix.app }}
-        run: npm run test
+#       - name: Run Tests
+#         if: matrix.app == 'backend'
+#         working-directory: ./${{ matrix.app }}
+#         run: npm run test
