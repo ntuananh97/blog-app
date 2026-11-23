@@ -35,6 +35,17 @@ jobs:
           push: true
           tags: ${{ env.IMAGE_API }}:latest
 
+      # Ghi secret nhiều dòng ra file (ngoài build context) để truyền qua secret-files
+      - name: Write client env file
+        env:
+          CLIENT_ENV: ${{ secrets.CLIENT_ENV }}
+        run: |
+          if [ -z "$CLIENT_ENV" ]; then
+            echo "::error::Secret CLIENT_ENV is empty or missing"
+            exit 1
+          fi
+          printf '%s\n' "$CLIENT_ENV" > "$RUNNER_TEMP/client.env"
+
       # Build và Push Next.js Web
       - name: Build and push Web image
         uses: docker/build-push-action@v5
@@ -42,8 +53,8 @@ jobs:
           context: ./client
           push: true
           tags: ${{ env.IMAGE_WEB }}:latest
-          secrets: |
-            env_file=${{ secrets.CLIENT_ENV }}
+          secret-files: |
+            env_file=${{ runner.temp }}/client.env
 
   deploy:
     needs: build-and-push
