@@ -56,6 +56,11 @@ jobs:
           secret-files: |
             env_file=${{ runner.temp }}/client.env
 
+      # Xoá file env tạm dù build thành công hay thất bại
+      - name: Remove client env file
+        if: always()
+        run: rm -f "$RUNNER_TEMP/client.env"
+
   deploy:
     needs: build-and-push
     runs-on: ubuntu-latest
